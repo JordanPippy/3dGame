@@ -12,11 +12,14 @@ public class PlayerController : MonoBehaviour
     private Vector3 cameraOffset;
     private float cameraYOffset;
     private float rotateX, rotateY;
+    private float cameraMax, currentRotation;
     private Vector3 jump, targetPosition;
     private bool canJump;
     void Start()
     {
         side = 0; forward = 0; didJump = 0; rotationRate = 50.0f;
+        cameraMax = 10.0f;
+        currentRotation = 0;
         speed = 10.0f;
         jumpForce = 2.0f;
         canJump = true;
@@ -75,7 +78,7 @@ public class PlayerController : MonoBehaviour
         
 
         doRotation();
-        pinCameraToPlayer();
+        //pinCameraToPlayer();
 
 
 
@@ -87,7 +90,19 @@ public class PlayerController : MonoBehaviour
 
     private void doRotation()
     {
+        //Player rotation
         player.transform.Rotate(0, rotateX * rotationRate * Time.deltaTime, 0);
+
+        //camera rotation
+        print(currentRotation);
+        if (currentRotation >= cameraMax*2 && rotateY > 0)
+            return;
+        if (currentRotation <= -cameraMax && rotateY < 0)
+            return;
+
+        currentRotation += rotateY;
+        playerCamera.transform.Rotate(rotateY, 0, 0);
+        
     }
 
     void OnCollisionStay(Collision collision)
@@ -134,8 +149,6 @@ public class PlayerController : MonoBehaviour
             newPosition = player.transform.position.y - 5;
 
 
-        float ang = Mathf.Atan2(player.transform.position.x - player.transform.position.z, playerCamera.transform.position.x - playerCamera.transform.position.z) * Mathf.Rad2Deg;
-        print("ang: " + ang);
         targetPosition = new Vector3(player.transform.position.x, 
                                         newPosition, 
                                         //player.transform.position.y,
