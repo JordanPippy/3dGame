@@ -10,8 +10,9 @@ public class PlayerController : MonoBehaviour
     private float side, forward, didJump;
     private float speed, jumpForce, rotationRate;
     private Vector3 cameraOffset;
+    private float cameraYOffset;
     private float rotateX, rotateY;
-    private Vector3 jump;
+    private Vector3 jump, targetPosition;
     private bool canJump;
     void Start()
     {
@@ -25,6 +26,11 @@ public class PlayerController : MonoBehaviour
         playerRb = player.GetComponent<Rigidbody>();
 
         cameraOffset = playerCamera.transform.position - player.transform.position;
+
+        targetPosition = new Vector3( player.transform.position.x, 
+                                        player.transform.position.y, 
+                                        player.transform.position.z ) ;
+        cameraYOffset = playerCamera.transform.position.y - player.transform.position.y;
     }
 
     // Update is called once per frame
@@ -45,8 +51,17 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(KeyCode.Space) && canJump)
             didJump = 1;
             //playerJump();
+        //debug
+        /*
+        if (Input.GetKey(KeyCode.H))
+            rotateY = 0.1f;
+        else if (Input.GetKey(KeyCode.J))
+            rotateY = -0.1f;
+        else
+            rotateY = 0;
+        */
         rotateX = Input.GetAxis("Horizontal");
-        rotateY = Input.GetAxis("Vertical");
+        rotateY = Input.GetAxis("Vertical") / -50;
     }
 
     void FixedUpdate()
@@ -94,28 +109,38 @@ public class PlayerController : MonoBehaviour
 
     private void pinCameraToPlayer()
     {
+        if (rotateY != 0)
+            print(rotateY);
+
         cameraOffset = Quaternion.AngleAxis(rotateX * rotationRate * Time.deltaTime, Vector3.up) * cameraOffset;
+
+        playerCamera.transform.position = new Vector3(
+                                        playerCamera.transform.position.x, 
+                                        player.transform.position.y + cameraYOffset, 
+                                        playerCamera.transform.position.z);
+
+        //THIS IS BECAUSE THE CAMERA CATCHES AIDS WHEN THE PLAYER JUMPS
+        // TODO: NOW THE CAMERA IS SUFFERING ED.
+        //Vector3 toSetCamera = player.transform.position + cameraOffset;
+        //toSetCamera.y = playerCamera.transform.position.y;
 
         playerCamera.transform.position = player.transform.position + cameraOffset;
 
-        Vector3 targetPosition = new Vector3( player.transform.position.x, 
-                                        playerCamera.transform.position.y, 
-                                        player.transform.position.z ) ;
-        playerCamera.transform.LookAt(targetPosition);
-        
-        //float ang = Vector3.Angle(playerCamera.transform.forward, player.transform.position - playerCamera.transform.position);
-        //print(ang);
-        /*
-        playerCamera.transform.rotation = new Quaternion(
-                                        playerCamera.transform.rotation.x,
-                                        playerCamera.transform.rotation.y + ang,
-                                        playerCamera.transform.rotation.z,
-                                        playerCamera.transform.rotation.w);
-                                        */
-        //playerCamera.transform.rotation = Quaternion.AngleAxis(ang, Vector3.up);
-                                        
-        //playerCamera.transform.rotation = Quaternion.AngleAxis(rotateY * rotationRate * Time.deltaTime, Vector3.right);
-        //Vector3 yRotate = playerCamera.transform.right * rotateY;
-        //playerCamera.transform.rotation = Quaternion.AngleAxis(rotateY, playerCamera.transform.right);
+
+        float newPosition = targetPosition.y + (rotateY);
+        if (newPosition > player.transform.position.y + 5)
+            newPosition = player.transform.position.y + 5;
+        if (newPosition < player.transform.position.y - 5)
+            newPosition = player.transform.position.y - 5;
+
+
+        float ang = Mathf.Atan2(player.transform.position.x - player.transform.position.z, playerCamera.transform.position.x - playerCamera.transform.position.z) * Mathf.Rad2Deg;
+        print("ang: " + ang);
+        targetPosition = new Vector3(player.transform.position.x, 
+                                        newPosition, 
+                                        //player.transform.position.y,
+                                        player.transform.position.z);
+
+        //playerCamera.transform.LookAt(targetPosition);
     }
 }
