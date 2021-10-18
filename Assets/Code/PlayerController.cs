@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     private float speed, jumpForce, rotationRate;
     private float rotateX, rotateY;
     private float cameraMax, currentRotation;
+    private float verticalSensitivity;
     private Vector3 jump, targetPosition;
     private bool canJump;
     void Start()
@@ -20,6 +21,7 @@ public class PlayerController : MonoBehaviour
         currentRotation = 0;
         speed = 10.0f;
         jumpForce = 2.0f;
+        verticalSensitivity = 0.02f;
         canJump = true;
         jump = new Vector3(0, 2.0f, 0);
         player = GameObject.FindGameObjectsWithTag("Player")[0];
@@ -42,7 +44,7 @@ public class PlayerController : MonoBehaviour
             didJump = 1;
 
         rotateX = Input.GetAxis("Horizontal");
-        rotateY = Input.GetAxis("Vertical") / -50;
+        rotateY = Input.GetAxis("Vertical") * -verticalSensitivity;
     }
 
     void FixedUpdate()
