@@ -6,23 +6,25 @@ public class PlayerController : MonoBehaviour
 {
     // Start is called before the first frame update
     private GameObject player, playerCamera;
-    private Rigidbody playerRb;
+    private Rigidbody playerRb; 
     private float side, forward, didJump;
     private float speed, jumpForce, rotationRate;
     private float rotateX, rotateY;
     private float cameraMax, currentRotation;
-    private float verticalSensitivity;
+    private float verticalSensitivity, horizontalSensitivity;
     private Vector3 jump, targetPosition;
-    private bool canJump;
+    private bool canJump, increasedGravity;
     void Start()
     {
         side = 0; forward = 0; didJump = 0; rotationRate = 50.0f;
-        cameraMax = 10.0f;
+        cameraMax = 20.0f;
         currentRotation = 0;
         speed = 10.0f;
         jumpForce = 2.0f;
-        verticalSensitivity = 0.02f;
+        verticalSensitivity = 0.1f;
+        horizontalSensitivity = 0.2f;
         canJump = true;
+        increasedGravity = false;
         jump = new Vector3(0, 2.0f, 0);
         player = GameObject.FindGameObjectsWithTag("Player")[0];
         playerCamera = GameObject.FindGameObjectsWithTag("MainCamera")[0];
@@ -32,19 +34,25 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(KeyCode.RightArrow))
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
             side = 1;
-        if (Input.GetKey(KeyCode.LeftArrow))
+        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
             side = -1;
-        if (Input.GetKey(KeyCode.UpArrow))
+        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
             forward = 1;
-        if (Input.GetKey(KeyCode.DownArrow))
+        if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
             forward = -1;
         if (Input.GetKey(KeyCode.Space) && canJump)
             didJump = 1;
 
-        rotateX = Input.GetAxis("Horizontal");
+        rotateX = Input.GetAxis("Horizontal") * horizontalSensitivity;
         rotateY = Input.GetAxis("Vertical") * -verticalSensitivity;
+
+        if (!canJump && playerRb.velocity.y <= 0.0f && !increasedGravity)
+        {
+            playerRb.AddForce(Vector3.down * -Physics.gravity.y * playerRb.mass * 0.75f, ForceMode.Impulse);
+            increasedGravity = true;
+        }
     }
 
     void FixedUpdate()
@@ -71,20 +79,22 @@ public class PlayerController : MonoBehaviour
         player.transform.Rotate(0, rotateX * rotationRate * Time.deltaTime, 0);
 
         //camera rotation
-        if (currentRotation >= cameraMax*2 && rotateY > 0) // Look further down than up.
+        if (currentRotation >= cameraMax*(1.5f) && rotateY > 0) // Look further down than up.
             return;
         if (currentRotation <= -cameraMax && rotateY < 0)
             return;
 
         currentRotation += rotateY;
         playerCamera.transform.Rotate(rotateY, 0, 0);
-        
     }
 
     void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.tag == "jumpReset")
+        {
             canJump = true;
+            increasedGravity = false;
+        }
     }
 
     private void playerJump()
